@@ -1,0 +1,76 @@
+import cv2
+import numpy as np
+
+# Leer el video
+cap = cv2.VideoCapture('video.mp4')
+
+# Inicializar las listas de entropías y posiciones
+entropías = []
+posiciones_iniciales = []
+posiciones_ordenadas = []
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Calcular la entropía para cada canal de color
+    b, g, r = cv2.split(frame)
+    entropy_b = np.log2(b + 1)
+    entropy_g = np.log2(g + 1)
+    entropy_r = np.log2(r + 1)
+
+    # Agregar la entropía a la lista
+    entropías.append((entropy_b, entropy_g, entropy_r))
+
+    # Identificar las zonas de baja entropía
+    baja_entropía_b = np.where(entropy_b < np.mean(entropy_b), 1, 0)
+    baja_entropía_g = np.where(entropy_g < np.mean(entropy_g), 1, 0)
+    baja_entropía_r = np.where(entropy_r < np.mean(entropy_r), 1, 0)
+
+    # Agregar las posiciones iniciales de las zonas de baja entropía
+    for i in range(baja_entropía_b.shape[0]):
+        for j in range(baja_entropía_b.shape[1]):
+            if baja_entropía_b[i, j] == 1 or baja_entropía_g[i, j] == 1 or baja_entropía_r[i, j] == 1:
+                posiciones_iniciales.append((i, j))
+
+    # Ordenar las zonas de alta o media entropía
+    alta_media_entropía_b = np.argsort(entropy_b, axis=None)
+    alta_media_entropía_g = np.argsort(entropy_g, axis=None)
+    alta_media_entropía_r = np.argsort(entropy_r, axis=None)
+
+    # Agregar las posiciones ordenadas de las zonas de alta o media entropía
+    posiciones_ordenadas.append((alta_media_entropía_b, alta_media_entropía_g, alta_media_entropía_r))
+
+# Guardar las posiciones iniciales y ordenadas
+np.save('posiciones_iniciales.npy', posiciones_iniciales)
+np.save('posiciones_ordenadas.npy', posiciones_ordenadas)
+
+# Leer el video original
+cap = cv2.VideoCapture('video.mp4')
+
+# Crear un video vacío
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+fps = cap.get(cv2.CAP_PROP_FPS)
+resolucion = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+video_salida = cv2.VideoWriter('video_salida.mp4', fourcc, fps, resolucion)
+
+# Leer las posiciones ordenadas de los objetos con entropía alta o media
+posiciones_ordenadas = np.load('posiciones_ordenadas.npy')
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Extraer los píxeles de los objetos con entropía alta o media
+    píxeles_extraídos = np.zeros(frame.shape)
+    for posición in posiciones_ordenadas:
+        píxeles_extraídos[posición[0], posición[1]] = frame[posición[0], posición[1]]
+
+    # Agregar los píxeles extraídos al video vacío
+    video_salida.write(píxeles_extraídos.astype(np.uint8))
+
+# Liberar los recursos
+cap.release()
+video_salida.release()
