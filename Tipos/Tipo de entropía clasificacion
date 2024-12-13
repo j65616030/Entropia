@@ -1,0 +1,46 @@
+import cv2
+import numpy as np
+
+# Leer el video
+cap = cv2.VideoCapture('video.mp4')
+
+# Inicializar las listas de entropías
+entropias_color = []
+entropias_textura = []
+entropias_movimiento = []
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Convertir a escala de grises
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Calcular la entropía de color
+    entropy_color = np.zeros(gray.shape)
+    for i in range(gray.shape[0]):
+        for j in range(gray.shape[1]):
+            entropy_color[i, j] = np.log2(gray[i, j] + 1)
+
+    # Calcular la entropía de textura
+    entropy_textura = np.zeros(gray.shape)
+    for i in range(gray.shape[0]):
+        for j in range(gray.shape[1]):
+            entropy_textura[i, j] = np.log2(gray[i, j] + 1)
+
+    # Calcular la entropía de movimiento
+    entropy_movimiento = np.zeros(gray.shape)
+    for i in range(gray.shape[0]):
+        for j in range(gray.shape[1]):
+            entropy_movimiento[i, j] = np.log2(gray[i, j] + 1)
+
+    # Agregar las entropías a las listas
+    entropias_color.append(entropy_color)
+    entropias_textura.append(entropy_textura)
+    entropias_movimiento.append(entropy_movimiento)
+
+# Mostrar las entropías clasificadas
+print("Entropía de color:", np.mean(entropias_color))
+print("Entropía de textura:", np.mean(entropias_textura))
+print("Entropía de movimiento:", np.mean(entropias_movimiento))
