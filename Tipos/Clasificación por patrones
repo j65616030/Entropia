@@ -1,0 +1,42 @@
+ import cv2
+import numpy as np
+
+# Leer el video
+cap = cv2.VideoCapture('video.mp4')
+
+# Inicializar las listas de entropías
+entropias_pelota = []
+entropias_jugador = []
+entropias_arbitro = []
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Convertir a escala de grises
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Calcular la entropía
+    entropy = np.zeros(gray.shape)
+    for i in range(gray.shape[0]):
+        for j in range(gray.shape[1]):
+            entropy[i, j] = np.log2(gray[i, j] + 1)
+
+    # Detectar objetos o características en el frame
+    pelota = cv2.circle(frame, (100, 100), 20, (0, 255, 0), -1)
+    jugador = cv2.rectangle(frame, (200, 200), (300, 300), (0, 0, 255), -1)
+    arbitro = cv2.line(frame, (400, 400), (500, 500), (255, 0, 0), -1)
+
+    # Clasificar la entropía según su relación con objetos o características
+    if pelota.any():
+        entropias_pelota.append(entropy)
+    elif jugador.any():
+        entropias_jugador.append(entropy)
+    elif arbitro.any():
+        entropias_arbitro.append(entropy)
+
+# Mostrar las entropías clasificadas
+print("Entropías relacionadas con la pelota:", len(entropias_pelota))
+print("Entropías relacionadas con el jugador:", len(entropias_jugador))
+print("Entropías relacionadas con el árbitro
