@@ -1,0 +1,32 @@
+import cv2
+import numpy as np
+
+# Leer el video
+cap = cv2.VideoCapture('video.mp4')
+
+# Inicializar la lista de entropías
+entropias = []
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Convertir a escala de grises
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Calcular la entropía
+    entropy = np.zeros(gray.shape)
+    for i in range(gray.shape[0]):
+        for j in range(gray.shape[1]):
+            entropy[i, j] = np.log2(gray[i, j] + 1)
+
+    # Agregar la entropía a la lista
+    entropias.append(entropy)
+
+# Ordenar la lista de entropías por localización temporal
+entropias.sort(key=lambda x: np.mean(x[:, :, 0]))  # Ordenar por el primer frame
+
+# Mostrar las entropías ordenadas
+for entropy in entropias:
+    print(np.mean(entropy)) 
